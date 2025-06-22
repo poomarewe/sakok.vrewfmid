@@ -86,20 +86,29 @@ function CMDLib:CreateConsole()
 		gui:Destroy()
 	end)
 
-	local output = Instance.new("TextLabel", frame)
-	output.Name = "Output"
-	output.Position = UDim2.new(0, 10, 0, 32)
-	output.Size = UDim2.new(1, -20, 1, -90)
-	output.BackgroundTransparency = 1
-	output.TextColor3 = Color3.new(1, 1, 1)
-	output.Font = Enum.Font.Code
-	output.TextSize = 16
-	output.TextXAlignment = Enum.TextXAlignment.Left
-	output.TextYAlignment = Enum.TextYAlignment.Top
-	output.TextWrapped = false
-	output.TextScaled = false
-	output.Text = ""
-	output.ClipsDescendants = true
+	-- Scrolling output frame
+	local outputFrame = Instance.new("ScrollingFrame", frame)
+	outputFrame.Name = "OutputFrame"
+	outputFrame.Position = UDim2.new(0, 10, 0, 32)
+	outputFrame.Size = UDim2.new(1, -20, 1, -90)
+	outputFrame.BackgroundTransparency = 1
+	outputFrame.BorderSizePixel = 0
+	outputFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	outputFrame.ScrollBarThickness = 6
+	outputFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+
+	local outputLabel = Instance.new("TextLabel", outputFrame)
+	outputLabel.Name = "OutputLabel"
+	outputLabel.Size = UDim2.new(1, -10, 0, 0)
+	outputLabel.Position = UDim2.new(0, 5, 0, 0)
+	outputLabel.BackgroundTransparency = 1
+	outputLabel.TextColor3 = Color3.new(1, 1, 1)
+	outputLabel.Font = Enum.Font.Code
+	outputLabel.TextSize = 16
+	outputLabel.TextXAlignment = Enum.TextXAlignment.Left
+	outputLabel.TextYAlignment = Enum.TextYAlignment.Top
+	outputLabel.TextWrapped = true
+	outputLabel.Text = ""
 
 	local inputBox = Instance.new("TextBox", frame)
 	inputBox.Size = UDim2.new(1, -20, 0, 26)
@@ -186,10 +195,12 @@ function CMDLib:CreateConsole()
 		showSuggestions(matches, currentSelection)
 	end
 
-	-- Print output helper
+	-- Print output helper with autoscroll
 	local function printToOutput(msg)
-		output.Text = output.Text .. "\n" .. msg
-		output.Text = string.sub(output.Text, -2048)
+		outputLabel.Text = outputLabel.Text .. "\n" .. msg
+		outputLabel.Size = UDim2.new(1, -10, 0, outputLabel.TextBounds.Y + 10)
+		outputFrame.CanvasSize = UDim2.new(0, 0, 0, outputLabel.TextBounds.Y + 15)
+		outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
 	end
 
 	-- Run command helper
@@ -272,7 +283,8 @@ function CMDLib:CreateConsole()
 	end)
 
 	self:Command("clear", function()
-		output.Text = ""
+		outputLabel.Text = ""
+		outputFrame.CanvasPosition = Vector2.new(0,0)
 	end)
 
 	printToOutput("Welcome to Roblox CMD. Type 'help' for commands.")
