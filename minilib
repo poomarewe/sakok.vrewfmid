@@ -6,18 +6,20 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UIS = game:GetService("UserInputService")
 
--- Clean up previous
+-- Remove old UI if exists
 local old = PlayerGui:FindFirstChild("CMDUI")
 if old then old:Destroy() end
 
--- Drag helper
-local function makeDraggable(frame, handle)
+-- Draggable helper
+local function makeDraggable(frame, dragBar)
 	local dragging = false
-	local offset
-	handle.InputBegan:Connect(function(input)
+	local dragInput, mouseStart, frameStart
+
+	dragBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			offset = input.Position - frame.AbsolutePosition
+			mouseStart = input.Position
+			frameStart = frame.Position
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
@@ -28,7 +30,11 @@ local function makeDraggable(frame, handle)
 
 	UIS.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			frame.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+			local delta = input.Position - mouseStart
+			frame.Position = UDim2.new(
+				frameStart.X.Scale, frameStart.X.Offset + delta.X,
+				frameStart.Y.Scale, frameStart.Y.Offset + delta.Y
+			)
 		end
 	end)
 end
@@ -42,104 +48,213 @@ function CMDLib:CreateConsole()
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-	local frame = Instance.new("Frame", gui)
+	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0, 600, 0, 300)
 	frame.Position = UDim2.new(0.5, -300, 0.5, -150)
-	frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	frame.BackgroundTransparency = 0.3
 	frame.BorderSizePixel = 0
 	frame.Name = "ConsoleFrame"
+	frame.Parent = gui
 
-	local title = Instance.new("TextLabel", frame)
-	title.Size = UDim2.new(1, -30, 0, 24)
-	title.Position = UDim2.new(0, 5, 0, 0)
+	local topBar = Instance.new("Frame", frame)
+	topBar.Size = UDim2.new(1, 0, 0, 30)
+	topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+	topBar.BackgroundTransparency = 0.3
+	topBar.BorderSizePixel = 0
+
+	local title = Instance.new("TextLabel", topBar)
+	title.Size = UDim2.new(1, -30, 1, 0)
+	title.Position = UDim2.new(0, 10, 0, 0)
 	title.Text = "Roblox Command Prompt"
-	title.BackgroundTransparency = 1
-	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextColor3 = Color3.fromRGB(200, 200, 255)
 	title.Font = Enum.Font.Code
-	title.TextSize = 16
+	title.TextSize = 17
+	title.BackgroundTransparency = 1
+	title.TextXAlignment = Enum.TextXAlignment.Left
 
-	local close = Instance.new("TextButton", frame)
-	close.Size = UDim2.new(0, 24, 0, 24)
-	close.Position = UDim2.new(1, -28, 0, 0)
+	local close = Instance.new("TextButton", topBar)
+	close.Size = UDim2.new(0, 26, 0, 26)
+	close.Position = UDim2.new(1, -30, 0, 2)
 	close.Text = "X"
-	close.BackgroundColor3 = Color3.fromRGB(90, 20, 100)
 	close.TextColor3 = Color3.new(1, 1, 1)
 	close.Font = Enum.Font.Code
 	close.TextSize = 16
+	close.BackgroundColor3 = Color3.fromRGB(120, 30, 120)
+	close.BorderSizePixel = 0
 	close.MouseButton1Click:Connect(function()
 		gui:Destroy()
 	end)
 
 	local output = Instance.new("TextLabel", frame)
 	output.Name = "Output"
-	output.Position = UDim2.new(0, 5, 0, 26)
-	output.Size = UDim2.new(1, -10, 1, -56)
+	output.Position = UDim2.new(0, 10, 0, 32)
+	output.Size = UDim2.new(1, -20, 1, -90)
 	output.BackgroundTransparency = 1
 	output.TextColor3 = Color3.new(1, 1, 1)
-	output.TextXAlignment = Enum.TextXAlignment.Left
-	output.TextYAlignment = Enum.TextYAlignment.Top
 	output.Font = Enum.Font.Code
 	output.TextSize = 16
+	output.TextXAlignment = Enum.TextXAlignment.Left
+	output.TextYAlignment = Enum.TextYAlignment.Top
 	output.TextWrapped = false
 	output.TextScaled = false
 	output.Text = ""
 	output.ClipsDescendants = true
 
 	local inputBox = Instance.new("TextBox", frame)
-	inputBox.PlaceholderText = "Type command..."
-	inputBox.Size = UDim2.new(1, -10, 0, 24)
-	inputBox.Position = UDim2.new(0, 5, 1, -28)
-	inputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	inputBox.Size = UDim2.new(1, -20, 0, 26)
+	inputBox.Position = UDim2.new(0, 10, 1, -50)
+	inputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	inputBox.BackgroundTransparency = 0.2
 	inputBox.TextColor3 = Color3.new(1, 1, 1)
 	inputBox.Font = Enum.Font.Code
 	inputBox.TextSize = 16
 	inputBox.ClearTextOnFocus = false
 	inputBox.TextXAlignment = Enum.TextXAlignment.Left
+	inputBox.PlaceholderText = "Type a command..."
 	inputBox.Text = ""
 
+	-- Suggestions UI
+	local suggFrame = Instance.new("Frame", frame)
+	suggFrame.Position = UDim2.new(0, 10, 1, -90)
+	suggFrame.Size = UDim2.new(1, -20, 0, 40)
+	suggFrame.BackgroundTransparency = 0.3
+	suggFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+	suggFrame.BorderSizePixel = 0
+	suggFrame.Visible = false
+
+	local suggLayout = Instance.new("UIListLayout", suggFrame)
+	suggLayout.FillDirection = Enum.FillDirection.Vertical
+	suggLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	suggLayout.Padding = UDim.new(0, 2)
+
+	local maxSuggestions = 5
+	local suggestionLabels = {}
+
+	-- Clear suggestions helper
+	local function clearSuggestions()
+		for _, label in ipairs(suggestionLabels) do
+			label:Destroy()
+		end
+		suggestionLabels = {}
+		suggFrame.Visible = false
+	end
+
+	-- Show suggestions helper
+	local function showSuggestions(matches, selectedIdx)
+		clearSuggestions()
+		if #matches == 0 then
+			suggFrame.Visible = false
+			return
+		end
+		suggFrame.Visible = true
+		for i = 1, math.min(#matches, maxSuggestions) do
+			local label = Instance.new("TextLabel", suggFrame)
+			label.Size = UDim2.new(1, -10, 0, 20)
+			label.Position = UDim2.new(0, 5, 0, (i - 1) * 22)
+			label.BackgroundTransparency = 1
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextYAlignment = Enum.TextYAlignment.Center
+			label.Font = Enum.Font.Code
+			label.TextSize = 16
+			label.TextColor3 = (i == selectedIdx) and Color3.fromRGB(180, 120, 255) or Color3.new(1,1,1)
+			label.Text = matches[i]
+			table.insert(suggestionLabels, label)
+		end
+	end
+
+	local currentSelection = 1
+	local currentMatches = {}
+
+	-- Update suggestions based on input
+	local function updateSuggestions(text)
+		text = text:lower()
+		if text == "" then
+			clearSuggestions()
+			return
+		end
+
+		local matches = {}
+		for name in pairs(self.Commands) do
+			if name:sub(1, #text) == text then
+				table.insert(matches, name)
+			end
+		end
+		table.sort(matches)
+		currentMatches = matches
+		currentSelection = 1
+		showSuggestions(matches, currentSelection)
+	end
+
+	-- Print output helper
 	local function printToOutput(msg)
 		output.Text = output.Text .. "\n" .. msg
 		output.Text = string.sub(output.Text, -2048)
 	end
 
+	-- Run command helper
 	local function runCommand(line)
-		local split = string.split(line, " ")
-		local cmd = table.remove(split, 1):lower()
+		local parts = string.split(line, " ")
+		local cmd = table.remove(parts, 1):lower()
 		local func = self.Commands[cmd]
 		if func then
-			local success, result = pcall(func, unpack(split))
-			if not success then
-				printToOutput("Error: " .. tostring(result))
-			elseif result then
-				printToOutput(result)
+			local ok, res = pcall(func, unpack(parts))
+			if not ok then
+				printToOutput("Error: " .. res)
+			elseif res then
+				printToOutput(res)
 			end
 		else
 			printToOutput("Unknown command: " .. cmd)
 		end
 	end
 
-	-- Tab Completion
+	-- Input changed event for live suggestions
+	inputBox:GetPropertyChangedSignal("Text"):Connect(function()
+		updateSuggestions(inputBox.Text)
+	end)
+
+	-- Input began to handle keys
 	UIS.InputBegan:Connect(function(input)
-		if input.KeyCode == Enum.KeyCode.Tab and inputBox:IsFocused() then
-			local current = inputBox.Text:lower()
-			for name in pairs(self.Commands) do
-				if name:sub(1, #current) == current then
-					inputBox.Text = name
-					inputBox.CursorPosition = #name + 1
-					break
+		if inputBox:IsFocused() then
+			if input.KeyCode == Enum.KeyCode.Tab then
+				-- Accept current suggestion
+				if #currentMatches > 0 then
+					inputBox.Text = currentMatches[currentSelection]
+					inputBox.CursorPosition = #inputBox.Text + 1
+					clearSuggestions()
+				end
+				-- Prevent default tab behavior (losing focus)
+				inputBox:CaptureFocus()
+				inputBox.CursorPosition = #inputBox.Text + 1
+			elseif input.KeyCode == Enum.KeyCode.Down then
+				if #currentMatches > 0 then
+					currentSelection = currentSelection + 1
+					if currentSelection > #currentMatches then
+						currentSelection = 1
+					end
+					showSuggestions(currentMatches, currentSelection)
+				end
+			elseif input.KeyCode == Enum.KeyCode.Up then
+				if #currentMatches > 0 then
+					currentSelection = currentSelection - 1
+					if currentSelection < 1 then
+						currentSelection = #currentMatches
+					end
+					showSuggestions(currentMatches, currentSelection)
 				end
 			end
 		end
 	end)
 
-	-- Handle Input
-	inputBox.FocusLost:Connect(function(enter)
-		if enter and inputBox.Text ~= "" then
-			local txt = inputBox.Text
+	-- Run command on enter
+	inputBox.FocusLost:Connect(function(enterPressed)
+		if enterPressed and inputBox.Text ~= "" then
+			local text = inputBox.Text
 			inputBox.Text = ""
-			printToOutput("> " .. txt)
-			runCommand(txt)
+			clearSuggestions()
+			printToOutput("> " .. text)
+			runCommand(text)
 		end
 	end)
 
@@ -160,9 +275,10 @@ function CMDLib:CreateConsole()
 		output.Text = ""
 	end)
 
-	printToOutput("Type 'help' for a list of commands.")
+	printToOutput("Welcome to Roblox CMD. Type 'help' for commands.")
 
-	makeDraggable(frame, title)
+	makeDraggable(frame, topBar)
+
 	return self
 end
 
