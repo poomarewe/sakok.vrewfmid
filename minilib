@@ -1,0 +1,66 @@
+local MiniLib = {}
+MiniLib.__index = MiniLib
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create Window
+function MiniLib:CreateWindow(title)
+    local self = setmetatable({}, MiniLib)
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "MiniLibUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = PlayerGui
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0, 100, 0, 100)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+
+    local Title = Instance.new("TextLabel")
+    Title.Text = title or "Window"
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 22
+    Title.Parent = MainFrame
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 6)
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Parent = MainFrame
+    Title.LayoutOrder = 0
+
+    self.ScreenGui = ScreenGui
+    self.MainFrame = MainFrame
+    return self
+end
+
+-- Create Button
+function MiniLib:CreateButton(text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -10, 0, 40)
+    Button.Position = UDim2.new(0, 5, 0, 0)
+    Button.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    Button.TextColor3 = Color3.new(1, 1, 1)
+    Button.Font = Enum.Font.SourceSans
+    Button.TextSize = 20
+    Button.Text = text or "Button"
+    Button.Name = "MiniButton"
+    Button.AutoButtonColor = true
+    Button.Parent = self.MainFrame
+
+    Button.MouseButton1Click:Connect(function()
+        if typeof(callback) == "function" then
+            callback()
+        end
+    end)
+end
+
+return MiniLib
