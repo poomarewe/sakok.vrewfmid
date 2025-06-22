@@ -6,25 +6,23 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UIS = game:GetService("UserInputService")
 
--- Remove previous instance
-local existing = PlayerGui:FindFirstChild("CMDUI")
-if existing then
-	existing:Destroy()
-end
+-- Clean up previous
+local old = PlayerGui:FindFirstChild("CMDUI")
+if old then old:Destroy() end
 
+-- Drag helper
 local function makeDraggable(frame, handle)
-	local dragging, offset
-
+	local dragging = false
+	local offset
 	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
 			offset = input.Position - frame.AbsolutePosition
-		end
-	end)
-
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
 		end
 	end)
 
@@ -42,117 +40,116 @@ function CMDLib:CreateConsole()
 	local gui = Instance.new("ScreenGui", PlayerGui)
 	gui.Name = "CMDUI"
 	gui.ResetOnSpawn = false
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	local frame = Instance.new("Frame", gui)
 	frame.Size = UDim2.new(0, 600, 0, 300)
 	frame.Position = UDim2.new(0.5, -300, 0.5, -150)
-	frame.BackgroundColor3 = Color3.new(0, 0, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	frame.BorderSizePixel = 0
-	frame.BackgroundTransparency = 0.1
 	frame.Name = "ConsoleFrame"
 
 	local title = Instance.new("TextLabel", frame)
 	title.Size = UDim2.new(1, -30, 0, 24)
 	title.Position = UDim2.new(0, 5, 0, 0)
-	title.Text = "CMD - Roblox"
+	title.Text = "Roblox Command Prompt"
 	title.BackgroundTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextColor3 = Color3.new(1, 1, 1)
+	title.TextColor3 = Color3.fromRGB(200, 200, 255)
 	title.Font = Enum.Font.Code
 	title.TextSize = 16
 
-	local closeBtn = Instance.new("TextButton", frame)
-	closeBtn.Size = UDim2.new(0, 24, 0, 24)
-	closeBtn.Position = UDim2.new(1, -28, 0, 0)
-	closeBtn.Text = "X"
-	closeBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-	closeBtn.TextColor3 = Color3.new(1, 1, 1)
-	closeBtn.Font = Enum.Font.Code
-	closeBtn.TextSize = 16
-	closeBtn.MouseButton1Click:Connect(function()
+	local close = Instance.new("TextButton", frame)
+	close.Size = UDim2.new(0, 24, 0, 24)
+	close.Position = UDim2.new(1, -28, 0, 0)
+	close.Text = "X"
+	close.BackgroundColor3 = Color3.fromRGB(90, 20, 100)
+	close.TextColor3 = Color3.new(1, 1, 1)
+	close.Font = Enum.Font.Code
+	close.TextSize = 16
+	close.MouseButton1Click:Connect(function()
 		gui:Destroy()
 	end)
 
 	local output = Instance.new("TextLabel", frame)
 	output.Name = "Output"
-	output.Position = UDim2.new(0, 5, 0, 30)
-	output.Size = UDim2.new(1, -10, 1, -60)
-	output.TextXAlignment = Enum.TextXAlignment.Left
-	output.TextYAlignment = Enum.TextYAlignment.Top
+	output.Position = UDim2.new(0, 5, 0, 26)
+	output.Size = UDim2.new(1, -10, 1, -56)
 	output.BackgroundTransparency = 1
 	output.TextColor3 = Color3.new(1, 1, 1)
+	output.TextXAlignment = Enum.TextXAlignment.Left
+	output.TextYAlignment = Enum.TextYAlignment.Top
 	output.Font = Enum.Font.Code
 	output.TextSize = 16
 	output.TextWrapped = false
-	output.Text = ""
 	output.TextScaled = false
-	output.TextStrokeTransparency = 1
+	output.Text = ""
 	output.ClipsDescendants = true
-	output.TextYAlignment = Enum.TextYAlignment.Top
 
 	local inputBox = Instance.new("TextBox", frame)
-	inputBox.PlaceholderText = "Type a command..."
+	inputBox.PlaceholderText = "Type command..."
 	inputBox.Size = UDim2.new(1, -10, 0, 24)
-	inputBox.Position = UDim2.new(0, 5, 1, -26)
-	inputBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+	inputBox.Position = UDim2.new(0, 5, 1, -28)
+	inputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	inputBox.TextColor3 = Color3.new(1, 1, 1)
 	inputBox.Font = Enum.Font.Code
 	inputBox.TextSize = 16
 	inputBox.ClearTextOnFocus = false
 	inputBox.TextXAlignment = Enum.TextXAlignment.Left
+	inputBox.Text = ""
 
 	local function printToOutput(msg)
 		output.Text = output.Text .. "\n" .. msg
-		output.Text = string.sub(output.Text, -2000) -- trim
+		output.Text = string.sub(output.Text, -2048)
 	end
 
-	local function runCommand(cmdLine)
-		local args = string.split(cmdLine, " ")
-		local cmd = table.remove(args, 1):lower()
-
-		local handler = self.Commands[cmd]
-		if handler then
-			local success, result = pcall(function() return handler(unpack(args)) end)
-			if success then
-				if result then printToOutput(result) end
-			else
-				printToOutput("Error: " .. result)
+	local function runCommand(line)
+		local split = string.split(line, " ")
+		local cmd = table.remove(split, 1):lower()
+		local func = self.Commands[cmd]
+		if func then
+			local success, result = pcall(func, unpack(split))
+			if not success then
+				printToOutput("Error: " .. tostring(result))
+			elseif result then
+				printToOutput(result)
 			end
 		else
 			printToOutput("Unknown command: " .. cmd)
 		end
 	end
 
-	-- Handle command enter
-	inputBox.FocusLost:Connect(function(enter)
-		if enter then
-			local text = inputBox.Text
-			inputBox.Text = ""
-			printToOutput("> " .. text)
-			runCommand(text)
-		end
-	end)
-
-	-- Tab to complete
+	-- Tab Completion
 	UIS.InputBegan:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Tab and inputBox:IsFocused() then
-			local currentText = inputBox.Text:lower()
+			local current = inputBox.Text:lower()
 			for name in pairs(self.Commands) do
-				if string.sub(name, 1, #currentText) == currentText then
-					inputBox.Text = name .. " "
+				if name:sub(1, #current) == current then
+					inputBox.Text = name
+					inputBox.CursorPosition = #name + 1
 					break
 				end
 			end
 		end
 	end)
 
+	-- Handle Input
+	inputBox.FocusLost:Connect(function(enter)
+		if enter and inputBox.Text ~= "" then
+			local txt = inputBox.Text
+			inputBox.Text = ""
+			printToOutput("> " .. txt)
+			runCommand(txt)
+		end
+	end)
+
 	-- Register default commands
 	self:Command("help", function()
-		local out = "Available commands:\n"
+		local msg = "Available commands:\n"
 		for name in pairs(self.Commands) do
-			out = out .. " - " .. name .. "\n"
+			msg = msg .. "  - " .. name .. "\n"
 		end
-		return out
+		return msg
 	end)
 
 	self:Command("say", function(...)
@@ -162,6 +159,8 @@ function CMDLib:CreateConsole()
 	self:Command("clear", function()
 		output.Text = ""
 	end)
+
+	printToOutput("Type 'help' for a list of commands.")
 
 	makeDraggable(frame, title)
 	return self
