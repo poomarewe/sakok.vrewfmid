@@ -6,32 +6,44 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
 
--- Drag function
-local function makeDraggable(frame, dragHandle)
-	local dragging, dragInput, startPos, startInputPos
+-- Remove existing UI
+local existing = PlayerGui:FindFirstChild("MiniLibUI")
+if existing then
+	existing:Destroy()
+end
 
-	dragHandle.InputBegan:Connect(function(input)
+-- Dragging helper
+local function makeDraggable(frame, dragBar)
+	local dragging, dragStart, startPos
+
+	local function onInputBegan(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
+			dragStart = input.Position
 			startPos = frame.Position
-			startInputPos = input.Position
-			input.Changed:Connect(function()
+
+			local connection
+			connection = input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
+					connection:Disconnect()
 				end
 			end)
 		end
-	end)
+	end
 
-	dragHandle.InputChanged:Connect(function(input)
+	local function onInputChanged(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - startInputPos
+			local delta = input.Position - dragStart
 			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
-	end)
+	end
+
+	dragBar.InputBegan:Connect(onInputBegan)
+	UserInputService.InputChanged:Connect(onInputChanged)
 end
 
--- Create Window
+-- Create UI window
 function MiniLib:CreateWindow(title)
 	local self = setmetatable({}, MiniLib)
 
@@ -104,7 +116,7 @@ function MiniLib:CreateWindow(title)
 	return self
 end
 
--- Create Button
+-- Create button
 function MiniLib:CreateButton(text, callback)
 	local Button = Instance.new("TextButton")
 	Button.Size = UDim2.new(1, 0, 0, 32)
