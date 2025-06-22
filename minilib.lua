@@ -99,7 +99,7 @@ function CMDLib:CreateConsole()
 
 	local outputLabel = Instance.new("TextLabel", outputFrame)
 	outputLabel.Name = "OutputLabel"
-	outputLabel.Size = UDim2.new(1, -10, 0, 0)
+	outputLabel.Size = UDim2.new(1, -10, 0, 20) -- Start height 20
 	outputLabel.Position = UDim2.new(0, 5, 0, 0)
 	outputLabel.BackgroundTransparency = 1
 	outputLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -108,7 +108,7 @@ function CMDLib:CreateConsole()
 	outputLabel.TextXAlignment = Enum.TextXAlignment.Left
 	outputLabel.TextYAlignment = Enum.TextYAlignment.Top
 	outputLabel.TextWrapped = true
-	outputLabel.Text = ""
+	outputLabel.Text = "Welcome to Roblox CMD. Type 'help' for commands."
 
 	local inputBox = Instance.new("TextBox", frame)
 	inputBox.Size = UDim2.new(1, -20, 0, 26)
@@ -140,7 +140,6 @@ function CMDLib:CreateConsole()
 	local maxSuggestions = 5
 	local suggestionLabels = {}
 
-	-- Clear suggestions helper
 	local function clearSuggestions()
 		for _, label in ipairs(suggestionLabels) do
 			label:Destroy()
@@ -149,7 +148,6 @@ function CMDLib:CreateConsole()
 		suggFrame.Visible = false
 	end
 
-	-- Show suggestions helper
 	local function showSuggestions(matches, selectedIdx)
 		clearSuggestions()
 		if #matches == 0 then
@@ -175,7 +173,6 @@ function CMDLib:CreateConsole()
 	local currentSelection = 1
 	local currentMatches = {}
 
-	-- Update suggestions based on input
 	local function updateSuggestions(text)
 		text = text:lower()
 		if text == "" then
@@ -195,7 +192,6 @@ function CMDLib:CreateConsole()
 		showSuggestions(matches, currentSelection)
 	end
 
-	-- Print output helper with autoscroll
 	local function printToOutput(msg)
 		outputLabel.Text = outputLabel.Text .. "\n" .. msg
 		outputLabel.Size = UDim2.new(1, -10, 0, outputLabel.TextBounds.Y + 10)
@@ -203,7 +199,6 @@ function CMDLib:CreateConsole()
 		outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
 	end
 
-	-- Run command helper
 	local function runCommand(line)
 		local parts = string.split(line, " ")
 		local cmd = table.remove(parts, 1):lower()
@@ -220,22 +215,18 @@ function CMDLib:CreateConsole()
 		end
 	end
 
-	-- Input changed event for live suggestions
 	inputBox:GetPropertyChangedSignal("Text"):Connect(function()
 		updateSuggestions(inputBox.Text)
 	end)
 
-	-- Input began to handle keys
 	UIS.InputBegan:Connect(function(input)
 		if inputBox:IsFocused() then
 			if input.KeyCode == Enum.KeyCode.Tab then
-				-- Accept current suggestion
 				if #currentMatches > 0 then
 					inputBox.Text = currentMatches[currentSelection]
 					inputBox.CursorPosition = #inputBox.Text + 1
 					clearSuggestions()
 				end
-				-- Prevent default tab behavior (losing focus)
 				inputBox:CaptureFocus()
 				inputBox.CursorPosition = #inputBox.Text + 1
 			elseif input.KeyCode == Enum.KeyCode.Down then
@@ -258,7 +249,6 @@ function CMDLib:CreateConsole()
 		end
 	end)
 
-	-- Run command on enter
 	inputBox.FocusLost:Connect(function(enterPressed)
 		if enterPressed and inputBox.Text ~= "" then
 			local text = inputBox.Text
@@ -269,7 +259,6 @@ function CMDLib:CreateConsole()
 		end
 	end)
 
-	-- Register default commands
 	self:Command("help", function()
 		local msg = "Available commands:\n"
 		for name in pairs(self.Commands) do
