@@ -199,18 +199,23 @@ function CMDLib:CreateConsole()
 	end
 
 	local function printToOutput(msg)
-		-- Add newline if needed
+		-- Append or start fresh
 		if outputLabel.Text == "" then
 			outputLabel.Text = msg
 		else
 			outputLabel.Text = outputLabel.Text .. "\n" .. msg
 		end
 
-		-- Force update TextBounds by waiting a frame (to fix sizing lag)
+		-- Wait one frame for TextBounds to update properly
 		task.wait()
 
+		-- Resize output label height to fit text
 		outputLabel.Size = UDim2.new(1, -10, 0, outputLabel.TextBounds.Y + 10)
+
+		-- Update scrolling frame canvas size
 		outputFrame.CanvasSize = UDim2.new(0, 0, 0, outputLabel.TextBounds.Y + 15)
+
+		-- Scroll to bottom
 		outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
 	end
 
@@ -279,6 +284,7 @@ function CMDLib:CreateConsole()
 		end
 	end)
 
+	-- Default commands
 	self:Command("help", function()
 		local msg = "Available commands:\n"
 		for name in pairs(self.Commands) do
