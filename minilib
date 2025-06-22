@@ -12,7 +12,22 @@ if existing then
 	existing:Destroy()
 end
 
--- Dragging helper
+-- Shadow helper
+local function createShadow(parent)
+	local shadow = Instance.new("ImageLabel")
+	shadow.Name = "Shadow"
+	shadow.BackgroundTransparency = 1
+	shadow.Size = UDim2.new(1, 60, 1, 60)
+	shadow.Position = UDim2.new(0, -30, 0, -30)
+	shadow.ZIndex = parent.ZIndex - 1
+	shadow.Image = "rbxassetid://1316045217"
+	shadow.ImageTransparency = 0.5
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	shadow.Parent = parent
+end
+
+-- Drag function
 local function makeDraggable(frame, dragBar)
 	local dragging, dragStart, startPos
 
@@ -43,7 +58,7 @@ local function makeDraggable(frame, dragBar)
 	UserInputService.InputChanged:Connect(onInputChanged)
 end
 
--- Create UI window
+-- Create Window
 function MiniLib:CreateWindow(title)
 	local self = setmetatable({}, MiniLib)
 
@@ -60,11 +75,22 @@ function MiniLib:CreateWindow(title)
 	MainFrame.BackgroundTransparency = 0.2
 	MainFrame.BorderSizePixel = 0
 	MainFrame.Name = "MainFrame"
+	MainFrame.ZIndex = 10
 	MainFrame.Parent = ScreenGui
+
+	createShadow(MainFrame)
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 35)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+	}
+	gradient.Rotation = 90
+	gradient.Parent = MainFrame
 
 	local TopBar = Instance.new("Frame")
 	TopBar.Size = UDim2.new(1, 0, 0, 30)
-	TopBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	TopBar.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
 	TopBar.BackgroundTransparency = 0.2
 	TopBar.BorderSizePixel = 0
 	TopBar.Parent = MainFrame
@@ -83,13 +109,17 @@ function MiniLib:CreateWindow(title)
 	local Close = Instance.new("TextButton")
 	Close.Size = UDim2.new(0, 25, 0, 25)
 	Close.Position = UDim2.new(1, -28, 0, 2)
-	Close.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
+	Close.BackgroundColor3 = Color3.fromRGB(120, 30, 160)
 	Close.BackgroundTransparency = 0.2
 	Close.Text = "X"
 	Close.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Close.Font = Enum.Font.GothamBold
 	Close.TextSize = 16
 	Close.Parent = TopBar
+
+	local closeShadow = Instance.new("UICorner")
+	closeShadow.CornerRadius = UDim.new(0, 4)
+	closeShadow.Parent = Close
 
 	Close.MouseButton1Click:Connect(function()
 		ScreenGui:Destroy()
@@ -116,17 +146,30 @@ function MiniLib:CreateWindow(title)
 	return self
 end
 
--- Create button
+-- Create Button
 function MiniLib:CreateButton(text, callback)
 	local Button = Instance.new("TextButton")
 	Button.Size = UDim2.new(1, 0, 0, 32)
-	Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	Button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 	Button.BackgroundTransparency = 0.2
-	Button.TextColor3 = Color3.fromRGB(200, 200, 255)
+	Button.TextColor3 = Color3.fromRGB(200, 180, 255)
 	Button.Font = Enum.Font.Gotham
 	Button.TextSize = 16
 	Button.Text = text or "Button"
+	Button.ZIndex = 11
 	Button.Parent = self.Content
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = Button
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 60, 100)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 50))
+	}
+	gradient.Rotation = 90
+	gradient.Parent = Button
 
 	Button.MouseButton1Click:Connect(function()
 		if typeof(callback) == "function" then
