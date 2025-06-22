@@ -10,7 +10,6 @@ local UIS = game:GetService("UserInputService")
 local old = PlayerGui:FindFirstChild("CMDUI")
 if old then old:Destroy() end
 
--- Draggable helper
 local function makeDraggable(frame, dragBar)
 	local dragging = false
 	local dragInput, mouseStart, frameStart
@@ -43,10 +42,11 @@ function CMDLib:CreateConsole()
 	local self = setmetatable({}, CMDLib)
 	self.Commands = {}
 
-	local gui = Instance.new("ScreenGui", PlayerGui)
+	local gui = Instance.new("ScreenGui")
 	gui.Name = "CMDUI"
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = PlayerGui
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0, 600, 0, 300)
@@ -57,13 +57,14 @@ function CMDLib:CreateConsole()
 	frame.Name = "ConsoleFrame"
 	frame.Parent = gui
 
-	local topBar = Instance.new("Frame", frame)
+	local topBar = Instance.new("Frame")
 	topBar.Size = UDim2.new(1, 0, 0, 30)
 	topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 	topBar.BackgroundTransparency = 0.3
 	topBar.BorderSizePixel = 0
+	topBar.Parent = frame
 
-	local title = Instance.new("TextLabel", topBar)
+	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, -30, 1, 0)
 	title.Position = UDim2.new(0, 10, 0, 0)
 	title.Text = "Roblox Command Prompt"
@@ -72,8 +73,9 @@ function CMDLib:CreateConsole()
 	title.TextSize = 17
 	title.BackgroundTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = topBar
 
-	local close = Instance.new("TextButton", topBar)
+	local close = Instance.new("TextButton")
 	close.Size = UDim2.new(0, 26, 0, 26)
 	close.Position = UDim2.new(1, -30, 0, 2)
 	close.Text = "X"
@@ -82,12 +84,13 @@ function CMDLib:CreateConsole()
 	close.TextSize = 16
 	close.BackgroundColor3 = Color3.fromRGB(120, 30, 120)
 	close.BorderSizePixel = 0
+	close.Parent = topBar
 	close.MouseButton1Click:Connect(function()
 		gui:Destroy()
 	end)
 
 	-- Scrolling output frame
-	local outputFrame = Instance.new("ScrollingFrame", frame)
+	local outputFrame = Instance.new("ScrollingFrame")
 	outputFrame.Name = "OutputFrame"
 	outputFrame.Position = UDim2.new(0, 10, 0, 32)
 	outputFrame.Size = UDim2.new(1, -20, 1, -90)
@@ -96,8 +99,9 @@ function CMDLib:CreateConsole()
 	outputFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 	outputFrame.ScrollBarThickness = 6
 	outputFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+	outputFrame.Parent = frame
 
-	local outputLabel = Instance.new("TextLabel", outputFrame)
+	local outputLabel = Instance.new("TextLabel")
 	outputLabel.Name = "OutputLabel"
 	outputLabel.Size = UDim2.new(1, -10, 0, 20) -- Start height 20
 	outputLabel.Position = UDim2.new(0, 5, 0, 0)
@@ -109,8 +113,9 @@ function CMDLib:CreateConsole()
 	outputLabel.TextYAlignment = Enum.TextYAlignment.Top
 	outputLabel.TextWrapped = true
 	outputLabel.Text = "Welcome to Roblox CMD. Type 'help' for commands."
+	outputLabel.Parent = outputFrame
 
-	local inputBox = Instance.new("TextBox", frame)
+	local inputBox = Instance.new("TextBox")
 	inputBox.Size = UDim2.new(1, -20, 0, 26)
 	inputBox.Position = UDim2.new(0, 10, 1, -50)
 	inputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
@@ -121,21 +126,22 @@ function CMDLib:CreateConsole()
 	inputBox.ClearTextOnFocus = false
 	inputBox.TextXAlignment = Enum.TextXAlignment.Left
 	inputBox.PlaceholderText = "Type a command..."
-	inputBox.Text = ""
+	inputBox.Parent = frame
 
-	-- Suggestions UI
-	local suggFrame = Instance.new("Frame", frame)
+	local suggFrame = Instance.new("Frame")
 	suggFrame.Position = UDim2.new(0, 10, 1, -90)
 	suggFrame.Size = UDim2.new(1, -20, 0, 40)
 	suggFrame.BackgroundTransparency = 0.3
 	suggFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 	suggFrame.BorderSizePixel = 0
 	suggFrame.Visible = false
+	suggFrame.Parent = frame
 
-	local suggLayout = Instance.new("UIListLayout", suggFrame)
+	local suggLayout = Instance.new("UIListLayout")
 	suggLayout.FillDirection = Enum.FillDirection.Vertical
 	suggLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	suggLayout.Padding = UDim.new(0, 2)
+	suggLayout.Parent = suggFrame
 
 	local maxSuggestions = 5
 	local suggestionLabels = {}
@@ -156,9 +162,8 @@ function CMDLib:CreateConsole()
 		end
 		suggFrame.Visible = true
 		for i = 1, math.min(#matches, maxSuggestions) do
-			local label = Instance.new("TextLabel", suggFrame)
+			local label = Instance.new("TextLabel")
 			label.Size = UDim2.new(1, -10, 0, 20)
-			label.Position = UDim2.new(0, 5, 0, (i - 1) * 22)
 			label.BackgroundTransparency = 1
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.TextYAlignment = Enum.TextYAlignment.Center
@@ -166,6 +171,7 @@ function CMDLib:CreateConsole()
 			label.TextSize = 16
 			label.TextColor3 = (i == selectedIdx) and Color3.fromRGB(180, 120, 255) or Color3.new(1,1,1)
 			label.Text = matches[i]
+			label.Parent = suggFrame
 			table.insert(suggestionLabels, label)
 		end
 	end
@@ -193,7 +199,16 @@ function CMDLib:CreateConsole()
 	end
 
 	local function printToOutput(msg)
-		outputLabel.Text = outputLabel.Text .. "\n" .. msg
+		-- Add newline if needed
+		if outputLabel.Text == "" then
+			outputLabel.Text = msg
+		else
+			outputLabel.Text = outputLabel.Text .. "\n" .. msg
+		end
+
+		-- Force update TextBounds by waiting a frame (to fix sizing lag)
+		task.wait()
+
 		outputLabel.Size = UDim2.new(1, -10, 0, outputLabel.TextBounds.Y + 10)
 		outputFrame.CanvasSize = UDim2.new(0, 0, 0, outputLabel.TextBounds.Y + 15)
 		outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
@@ -201,7 +216,12 @@ function CMDLib:CreateConsole()
 
 	local function runCommand(line)
 		local parts = string.split(line, " ")
-		local cmd = table.remove(parts, 1):lower()
+		local cmd = table.remove(parts, 1)
+		if cmd then
+			cmd = cmd:lower()
+		else
+			return
+		end
 		local func = self.Commands[cmd]
 		if func then
 			local ok, res = pcall(func, unpack(parts))
@@ -211,7 +231,7 @@ function CMDLib:CreateConsole()
 				printToOutput(res)
 			end
 		else
-			printToOutput("Unknown command: " .. cmd)
+			printToOutput("Unknown command: " .. tostring(cmd))
 		end
 	end
 
