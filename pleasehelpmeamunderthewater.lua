@@ -1543,7 +1543,7 @@ FarmButton.MouseButton1Click:Connect(function()
                 local dnfDetected = false
                 for i = 1, #deathTrialPath do
                     if not shouldContinue("death") then return end
-                    local success = safeCarMovement(car, deathTrialPath[i], 0.02, "death")
+                    local success = safeCarMovement(car, deathTrialPath[i], 0.015, "death")
                     if not success then break end
                     
                     -- Check for DNF every 50 waypoints (minimal overhead)
