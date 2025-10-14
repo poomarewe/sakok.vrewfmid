@@ -1578,7 +1578,7 @@ FarmButton.MouseButton1Click:Connect(function()
                     task.wait(3)
                     notify("DNF Handler", "Clicking Continue button...", 2)
                     
-                    -- Click the ContinueText button using Activated (game will destroy GUI)
+                    -- Click the ContinueText button using firesignal (game will destroy GUI)
                     pcall(function()
                         local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                         if progressGui then
@@ -1588,9 +1588,13 @@ FarmButton.MouseButton1Click:Connect(function()
                                 if close then
                                     local continueBtn = close:FindFirstChild("ContinueText")
                                     if continueBtn and continueBtn:IsA("TextButton") then
-                                        -- Fire Activated event
-                                        continueBtn.Activated:Fire()
-                                        print("[DNF] Continue button activated")
+                                        -- Simulate real mouse click
+                                        firesignal(continueBtn.MouseButton1Down)
+                                        task.wait(0.05)
+                                        firesignal(continueBtn.MouseButton1Up)
+                                        task.wait(0.05)
+                                        firesignal(continueBtn.MouseButton1Click)
+                                        print("[DNF] Continue button clicked with firesignal")
                                     end
                                 end
                             end
@@ -1674,7 +1678,7 @@ FarmButton.MouseButton1Click:Connect(function()
                     task.wait(3)
                     notify("Max Retries", "Clicking Continue button...", 2)
                     
-                    -- Click the ContinueText button using Activated (game will destroy GUI)
+                    -- Click the ContinueText button using firesignal (game will destroy GUI)
                     pcall(function()
                         local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                         if progressGui then
@@ -1684,9 +1688,13 @@ FarmButton.MouseButton1Click:Connect(function()
                                 if close then
                                     local continueBtn = close:FindFirstChild("ContinueText")
                                     if continueBtn and continueBtn:IsA("TextButton") then
-                                        -- Fire Activated event
-                                        continueBtn.Activated:Fire()
-                                        print("[MaxRetry] Continue button activated")
+                                        -- Simulate real mouse click
+                                        firesignal(continueBtn.MouseButton1Down)
+                                        task.wait(0.05)
+                                        firesignal(continueBtn.MouseButton1Up)
+                                        task.wait(0.05)
+                                        firesignal(continueBtn.MouseButton1Click)
+                                        print("[MaxRetry] Continue button clicked with firesignal")
                                     end
                                 end
                             end
@@ -1714,7 +1722,7 @@ FarmButton.MouseButton1Click:Connect(function()
                 task.wait(3)
                 notify("Race", "Clicking Continue button...", 2)
                 
-                -- Click the ContinueText button using Activated (game will destroy GUI)
+                -- Click the ContinueText button using firesignal (game will destroy GUI)
                 pcall(function()
                     local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                     if progressGui then
@@ -1724,9 +1732,13 @@ FarmButton.MouseButton1Click:Connect(function()
                             if close then
                                 local continueBtn = close:FindFirstChild("ContinueText")
                                 if continueBtn and continueBtn:IsA("TextButton") then
-                                    -- Fire Activated event
-                                    continueBtn.Activated:Fire()
-                                    print("[RACE] Continue button activated")
+                                    -- Simulate real mouse click
+                                    firesignal(continueBtn.MouseButton1Down)
+                                    task.wait(0.05)
+                                    firesignal(continueBtn.MouseButton1Up)
+                                    task.wait(0.05)
+                                    firesignal(continueBtn.MouseButton1Click)
+                                    print("[RACE] Continue button clicked with firesignal")
                                 end
                             end
                         end
@@ -1812,7 +1824,7 @@ StopButton.MouseButton1Click:Connect(function()
         task.wait(3)
         notify("Stop", "Clicking Continue button...", 2)
         
-        -- Click the ContinueText button using Activated (game will destroy GUI)
+        -- Click the ContinueText button using firesignal (game will destroy GUI)
         pcall(function()
             local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
             if progressGui then
@@ -1822,9 +1834,13 @@ StopButton.MouseButton1Click:Connect(function()
                     if close then
                         local continueBtn = close:FindFirstChild("ContinueText")
                         if continueBtn and continueBtn:IsA("TextButton") then
-                            -- Fire Activated event
-                            continueBtn.Activated:Fire()
-                            print("[STOP] Continue button activated")
+                            -- Simulate real mouse click
+                            firesignal(continueBtn.MouseButton1Down)
+                            task.wait(0.05)
+                            firesignal(continueBtn.MouseButton1Up)
+                            task.wait(0.05)
+                            firesignal(continueBtn.MouseButton1Click)
+                            print("[STOP] Continue button clicked with firesignal")
                         end
                     end
                 end
