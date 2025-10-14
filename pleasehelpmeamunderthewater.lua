@@ -1371,7 +1371,7 @@ local function safeCarMovement(car, targetCF, duration, farmType)
     local lookDirection = (endPos - startPos).Unit
     local targetRotation = CFrame.new(targetCF.Position, targetCF.Position + Vector3.new(lookDirection.X, 0, lookDirection.Z))
       -- Smooth interpolation (2 steps for balance between speed and smoothness)
-    local steps = 2
+    local steps = 1
     local stepDuration = duration / steps
     
     for step = 1, steps do
@@ -1543,7 +1543,7 @@ FarmButton.MouseButton1Click:Connect(function()
                 local dnfDetected = false
                 for i = 1, #deathTrialPath do
                     if not shouldContinue("death") then return end
-                    local success = safeCarMovement(car, deathTrialPath[i], 0.015, "death")
+                    local success = safeCarMovement(car, deathTrialPath[i], 0.03, "death")
                     if not success then break end
                     
                     -- Check for DNF every 50 waypoints (minimal overhead)
@@ -1561,8 +1561,7 @@ FarmButton.MouseButton1Click:Connect(function()
                             end
                         end
                     end
-                end
-                  -- Handle DNF - cleanup and skip this race
+                end                  -- Handle DNF - cleanup and skip this race
                 if dnfDetected then
                     notify("DNF Handler", "Cleaning up and rejoining...", 2)
                       -- Reset velocities before cleanup
@@ -1574,35 +1573,34 @@ FarmButton.MouseButton1Click:Connect(function()
                         vim:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.1)
                         vim:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                    end)                    -- Wait 3 seconds after results appear
-                    task.wait(3)
-                    notify("DNF Handler", "Clicking Continue button...", 2)
+                    end)
                     
-                    -- Click the ContinueText button using firesignal (game will destroy GUI)
+                    -- Wait 2 seconds after results appear
+                    notify("DNF Handler", "Waiting before cleanup...", 2)
+                    task.wait(2)
+                    
+                    -- Destroy ProgressGui
+                    notify("DNF Handler", "Destroying Results GUI...", 2)
                     pcall(function()
                         local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                         if progressGui then
-                            local results = progressGui:FindFirstChild("Results")
-                            if results then
-                                local close = results:FindFirstChild("Close")
-                                if close then
-                                    local continueBtn = close:FindFirstChild("ContinueText")
-                                    if continueBtn and continueBtn:IsA("TextButton") then
-                                        -- Simulate real mouse click
-                                        firesignal(continueBtn.MouseButton1Down)
-                                        task.wait(0.05)
-                                        firesignal(continueBtn.MouseButton1Up)
-                                        task.wait(0.05)
-                                        firesignal(continueBtn.MouseButton1Click)
-                                        print("[DNF] Continue button clicked with firesignal")
-                                    end
-                                end
-                            end
+                            progressGui:Destroy()
+                            print("[DNF] ProgressGui destroyed")
                         end
                     end)
                     
-                    -- Wait for GUI to be destroyed by game
-                    task.wait(1)
+                    -- Wait 2 seconds then verify it's gone
+                    task.wait(2)
+                    pcall(function()
+                        local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
+                        if progressGui then
+                            progressGui:Destroy()
+                            print("[DNF] ProgressGui still existed, destroyed again")
+                        else
+                            print("[DNF] ProgressGui confirmed destroyed")
+                        end
+                    end)
+                    
                     return -- Skip to next race iteration (don't count as completed)
                 end
                 
@@ -1669,35 +1667,35 @@ FarmButton.MouseButton1Click:Connect(function()
                     resetVelocities(car, player)
                     
                     -- Send Enter key to exit race
-                    local vim = game:GetService("VirtualInputManager")
-                    pcall(function()
+                    local vim = game:GetService("VirtualInputManager")                    pcall(function()
                         vim:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.1)
                         vim:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                    end)                      -- Wait 3 seconds after results appear
-                    task.wait(3)
-                    notify("Max Retries", "Clicking Continue button...", 2)
+                    end)
                     
-                    -- Click the ContinueText button using firesignal (game will destroy GUI)
+                    -- Wait 2 seconds after exit
+                    notify("Max Retries", "Waiting before cleanup...", 2)
+                    task.wait(2)
+                    
+                    -- Destroy ProgressGui
+                    notify("Max Retries", "Destroying Results GUI...", 2)
                     pcall(function()
                         local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                         if progressGui then
-                            local results = progressGui:FindFirstChild("Results")
-                            if results then
-                                local close = results:FindFirstChild("Close")
-                                if close then
-                                    local continueBtn = close:FindFirstChild("ContinueText")
-                                    if continueBtn and continueBtn:IsA("TextButton") then
-                                        -- Simulate real mouse click
-                                        firesignal(continueBtn.MouseButton1Down)
-                                        task.wait(0.05)
-                                        firesignal(continueBtn.MouseButton1Up)
-                                        task.wait(0.05)
-                                        firesignal(continueBtn.MouseButton1Click)
-                                        print("[MaxRetry] Continue button clicked with firesignal")
-                                    end
-                                end
-                            end
+                            progressGui:Destroy()
+                            print("[MaxRetry] ProgressGui destroyed")
+                        end
+                    end)
+                    
+                    -- Wait 2 seconds then verify it's gone
+                    task.wait(2)
+                    pcall(function()
+                        local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
+                        if progressGui then
+                            progressGui:Destroy()
+                            print("[MaxRetry] ProgressGui still existed, destroyed again")
+                        else
+                            print("[MaxRetry] ProgressGui confirmed destroyed")
                         end
                     end)
                       notify("Restart", "Restarting race...", 2)
@@ -1713,40 +1711,37 @@ FarmButton.MouseButton1Click:Connect(function()
                 
                 -- Jump out of the car (Enter key)
                 notify("Race", "Exiting car...", 2)
-                local vim = game:GetService("VirtualInputManager")
-                pcall(function()
+                local vim = game:GetService("VirtualInputManager")                pcall(function()
                     vim:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                     task.wait(0.1)
                     vim:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                end)                -- Wait 3 seconds after results appear
-                task.wait(3)
-                notify("Race", "Clicking Continue button...", 2)
+                end)
                 
-                -- Click the ContinueText button using firesignal (game will destroy GUI)
+                -- Wait 2 seconds after results appear
+                notify("Race", "Waiting before cleanup...", 2)
+                task.wait(2)
+                
+                -- Destroy ProgressGui
+                notify("Race", "Destroying Results GUI...", 2)
                 pcall(function()
                     local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
                     if progressGui then
-                        local results = progressGui:FindFirstChild("Results")
-                        if results then
-                            local close = results:FindFirstChild("Close")
-                            if close then
-                                local continueBtn = close:FindFirstChild("ContinueText")
-                                if continueBtn and continueBtn:IsA("TextButton") then
-                                    -- Simulate real mouse click
-                                    firesignal(continueBtn.MouseButton1Down)
-                                    task.wait(0.05)
-                                    firesignal(continueBtn.MouseButton1Up)
-                                    task.wait(0.05)
-                                    firesignal(continueBtn.MouseButton1Click)
-                                    print("[RACE] Continue button clicked with firesignal")
-                                end
-                            end
-                        end
+                        progressGui:Destroy()
+                        print("[RACE] ProgressGui destroyed")
                     end
                 end)
                 
-                -- Wait for GUI to be destroyed by game
-                task.wait(1)
+                -- Wait 2 seconds then verify it's gone
+                task.wait(2)
+                pcall(function()
+                    local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
+                    if progressGui then
+                        progressGui:Destroy()
+                        print("[RACE] ProgressGui still existed, destroyed again")
+                    else
+                        print("[RACE] ProgressGui confirmed destroyed")
+                    end
+                end)
                 
                 -- Update stats
                 farmStats.lapsCompleted = farmStats.lapsCompleted + 1
@@ -1817,38 +1812,35 @@ StopButton.MouseButton1Click:Connect(function()
             end            if tick() - waitStart > 30 then
                 warn("Timeout waiting for race results after stop")
                 break
-            end
-        end        print("[STOP] Results GUI check finished!")
+            end        end
         
-        -- Wait 3 seconds after results appear
-        task.wait(3)
-        notify("Stop", "Clicking Continue button...", 2)
+        print("[STOP] Results GUI check finished!")
         
-        -- Click the ContinueText button using firesignal (game will destroy GUI)
+        -- Wait 2 seconds after results appear
+        notify("Stop", "Waiting before cleanup...", 2)
+        task.wait(2)
+        
+        -- Destroy ProgressGui
+        notify("Stop", "Destroying Results GUI...", 2)
         pcall(function()
             local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
             if progressGui then
-                local results = progressGui:FindFirstChild("Results")
-                if results then
-                    local close = results:FindFirstChild("Close")
-                    if close then
-                        local continueBtn = close:FindFirstChild("ContinueText")
-                        if continueBtn and continueBtn:IsA("TextButton") then
-                            -- Simulate real mouse click
-                            firesignal(continueBtn.MouseButton1Down)
-                            task.wait(0.05)
-                            firesignal(continueBtn.MouseButton1Up)
-                            task.wait(0.05)
-                            firesignal(continueBtn.MouseButton1Click)
-                            print("[STOP] Continue button clicked with firesignal")
-                        end
-                    end
-                end
+                progressGui:Destroy()
+                print("[STOP] ProgressGui destroyed")
             end
         end)
         
-        -- Wait for GUI to be destroyed by game
-        task.wait(1)
+        -- Wait 2 seconds then verify it's gone
+        task.wait(2)
+        pcall(function()
+            local progressGui = player.PlayerGui:FindFirstChild("ProgressGui")
+            if progressGui then
+                progressGui:Destroy()
+                print("[STOP] ProgressGui still existed, destroyed again")
+            else
+                print("[STOP] ProgressGui confirmed destroyed")
+            end
+        end)
         
         StatusDisplay.Text = "STATUS: STOPPED"
         notify("Farm", "Farm stopped and cleaned up", 3)
