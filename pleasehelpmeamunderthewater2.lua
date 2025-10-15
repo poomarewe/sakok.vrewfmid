@@ -838,7 +838,7 @@ local function safeCarMovement(car, targetCF, duration, farmType)
         car:PivotTo(targetCF)
         return true
     end    local direction = (targetPos - startPos).Unit
-    local velocity = direction * (distance / duration) * 0.2  -- Reduced velocity by 50%
+    local velocity = direction * (distance / duration) * 0.02  -- Reduced velocity by 50%
     
     -- Make car face target (keep upright)
     local lookVector = Vector3.new(direction.X, 0, direction.Z).Unit
